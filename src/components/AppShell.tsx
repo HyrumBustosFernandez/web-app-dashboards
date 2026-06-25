@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BarChart3, ShieldCheck, Calculator, Search, Database,
-  ShieldAlert, TrendingUp, ChevronRight, UploadCloud,
+  ShieldAlert, TrendingUp, ChevronRight, UploadCloud, Home,
 } from "lucide-react";
 import { useData } from "@/lib/store";
 import { ThemeToggle } from "./ThemeToggle";
@@ -26,7 +26,7 @@ function Sidebar() {
   const { data } = useData();
   return (
     <aside className="fixed inset-y-0 left-0 w-[244px] bg-ink text-slate-300 flex flex-col z-30">
-      <div className="px-5 h-16 flex items-center gap-2.5 border-b border-white/5">
+      <Link href="/" className="px-5 h-16 flex items-center gap-2.5 border-b border-white/5 hover:bg-white/5 transition-colors" title="Volver al inicio">
         <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center shrink-0">
           <ShieldAlert className="w-[18px] h-[18px] text-white" />
         </div>
@@ -34,7 +34,7 @@ function Sidebar() {
           <div className="text-[13px] font-semibold text-white tracking-tight">Risk Office</div>
           <div className="text-[10px] text-slate-400">{data?.meta.nombreProyecto ?? "SGB"}</div>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex-1 px-3 py-4 space-y-0.5">
         {NAV.map((item) => {
@@ -56,8 +56,15 @@ function Sidebar() {
         })}
       </nav>
 
-      <div className="px-4 py-4 border-t border-white/5">
-        <div className="text-[10px] text-slate-500 leading-relaxed">
+      <div className="px-3 py-4 border-t border-white/5 space-y-3">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-slate-300 hover:bg-white/5 hover:text-white transition-colors"
+        >
+          <Home className="w-[18px] h-[18px] shrink-0 text-slate-400" />
+          Volver al inicio
+        </Link>
+        <div className="px-3 text-[10px] text-slate-500 leading-relaxed">
           Dir. de Proyecto<br />
           <span className="text-slate-300">{data?.meta.director ?? "—"}</span>
         </div>
