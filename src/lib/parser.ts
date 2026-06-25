@@ -3,7 +3,7 @@
 // so it survives minor layout changes between workbook versions.
 
 import * as XLSX from "xlsx";
-import type { Risk, PertRecord, RoleSalary, RiskDataset, ProjectMeta } from "./types";
+import type { Risk, PertRecord, RoleSalary, RiskDataset, ProjectMeta, ProjectTotals } from "./types";
 
 type Row = (string | number | Date | boolean | null)[];
 
@@ -237,6 +237,52 @@ function parseSueldos(rows: Row[]): RoleSalary[] {
   return out;
 }
 
+// Look for a number to the right of a label cell, then directly below it.
+function numberRightOrBelow(rows: Row[], r: number, c: number): number | null {
+  for (let j = c + 1; j < rows[r].length; j++) {
+    const n = toNum(rows[r][j]);
+    if (n !== null) return n;
+  }
+  for (let i = r + 1; i <= Math.min(r + 2, rows.length - 1); i++) {
+    const n = toNum(get(rows[i], c));
+    if (n !== null) return n;
+  }
+  return null;
+}
+
+// Scan loose summary cells by their label text, wherever they sit in the sheet.
+// These totals are not part of the risk tables, so they're matched by keyword
+// rather than column position. First match across the scanned sheets wins.
+function scanTotals(wb: XLSX.WorkBook): ProjectTotals {
+  const totals: ProjectTotals = { pertTotal: null, riesgoTotal: null, fondoContingencia: null, remanente: null };
+  const sheets = [SHEET.negativos, SHEET.pert, SHEET.positivos];
+
+  for (const name of sheets) {
+    const rows = sheetRows(wb, name);
+    if (!rows) continue;
+    for (let r = 0; r < rows.length; r++) {
+      const row = rows[r];
+      for (let c = 0; c < row.length; c++) {
+        const k = norm(row[c]);
+        if (!k) continue;
+        if (totals.pertTotal === null && k.includes("pert") && k.includes("total")) {
+          totals.pertTotal = numberRightOrBelow(rows, r, c);
+        }
+        if (totals.riesgoTotal === null && k.includes("riesgo") && k.includes("total")) {
+          totals.riesgoTotal = numberRightOrBelow(rows, r, c);
+        }
+        if (totals.fondoContingencia === null && k.includes("contingencia") && (k.includes("fondo") || k.includes("total"))) {
+          totals.fondoContingencia = numberRightOrBelow(rows, r, c);
+        }
+        if (totals.remanente === null && k.includes("remanente")) {
+          totals.remanente = numberRightOrBelow(rows, r, c);
+        }
+      }
+    }
+  }
+  return totals;
+}
+
 function parseMeta(wb: XLSX.WorkBook): ProjectMeta {
   const rows = sheetRows(wb, SHEET.negativos) || [];
   let nombreProyecto = "Sistema SGB";
@@ -303,5 +349,6 @@ export function parseWorkbook(wb: XLSX.WorkBook): RiskDataset {
     positivos: parseRiskSheet(posRows, "POS"),
     pert: parsePert(pertRows),
     roles: parseSueldos(roleRows),
+    totals: scanTotals(wb),
   };
 }

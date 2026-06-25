@@ -8,7 +8,7 @@ import { PageHeader, Card, PanelHeader, EmptyState, Badge } from "@/components/u
 import { KpiCard } from "@/components/KpiCard";
 import { CategoryBar, RankingBar } from "@/components/charts/Bars";
 import { formatCLP, formatCLPCompact, formatDays, formatNumber, truncate } from "@/lib/format";
-import { DollarSign, Clock, TrendingUp, CheckCircle2, AlertTriangle } from "lucide-react";
+import { DollarSign, Clock, TrendingUp, CheckCircle2, AlertTriangle, Calculator, ShieldAlert, PiggyBank, Wallet } from "lucide-react";
 
 export default function PertPage() {
   const { data, dataset } = useData();
@@ -30,6 +30,15 @@ export default function PertPage() {
 
   const hasPert = risks.some((r) => r.pertCosto != null);
 
+  // Summary totals scanned from loose cells in the imported workbook. The first
+  // two fall back to computed sums when the workbook has no labeled total cell.
+  const totals = data.totals;
+  const fmtTotal = (n: number | null | undefined) => (n == null ? "—" : formatCLP(n));
+  const pertTotalFromFile = totals?.pertTotal != null;
+  const riesgoTotalFromFile = totals?.riesgoTotal != null;
+  const pertTotalVal = totals?.pertTotal ?? totalPert;
+  const riesgoTotalVal = totals?.riesgoTotal ?? totalEvent;
+
   // Risks to justify: prefer PERT cost, fall back to event cost.
   const toJustify = topBy(risks, (r) => r.pertCosto ?? r.costoEvento, 12);
 
@@ -46,6 +55,30 @@ export default function PertPage() {
         <KpiCard index={1} label="Costo de eventos total" value={formatCLP(totalEvent)} icon={TrendingUp} />
         <KpiCard index={2} label="Tiempo PERT promedio" value={formatDays(avgTime)} icon={Clock} />
         <KpiCard index={3} label="Riesgos con costo" value={risks.filter((r) => (r.pertCosto ?? r.costoEvento ?? 0) > 0).length} icon={CheckCircle2} sub={`de ${risks.length}`} />
+      </div>
+
+      <div className="mb-6">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 mb-2">
+          Totales del fondo de contingencia
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <KpiCard
+            index={0} label="PERT total" value={fmtTotal(pertTotalVal)} icon={Calculator} accent
+            sub={pertTotalFromFile ? "Del archivo importado" : "Calculado (suma PERT)"}
+          />
+          <KpiCard
+            index={1} label="Riesgo total" value={fmtTotal(riesgoTotalVal)} icon={ShieldAlert}
+            sub={riesgoTotalFromFile ? "Del archivo importado" : "Calculado (suma eventos)"}
+          />
+          <KpiCard
+            index={2} label="Costos fondo de contingencia" value={fmtTotal(totals?.fondoContingencia)} icon={PiggyBank}
+            sub={totals?.fondoContingencia != null ? "Del archivo importado" : "No encontrado en el archivo"}
+          />
+          <KpiCard
+            index={3} label="Remanente" value={fmtTotal(totals?.remanente)} icon={Wallet}
+            sub={totals?.remanente != null ? "Del archivo importado" : "No encontrado en el archivo"}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">

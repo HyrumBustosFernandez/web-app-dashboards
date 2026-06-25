@@ -62,12 +62,22 @@ export interface ProjectMeta {
   director: string | null;
 }
 
+// Standalone summary values that live in loose cells of the workbook
+// (typically below the risk tables), scanned by label rather than position.
+export interface ProjectTotals {
+  pertTotal: number | null;
+  riesgoTotal: number | null;
+  fondoContingencia: number | null;
+  remanente: number | null;
+}
+
 export interface RiskDataset {
   meta: ProjectMeta;
   negativos: Risk[];
   positivos: Risk[];
   pert: PertRecord[];
   roles: RoleSalary[];
+  totals?: ProjectTotals;
 }
 
 export interface CountItem {
