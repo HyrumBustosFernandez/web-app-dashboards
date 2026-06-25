@@ -9,12 +9,14 @@ const P_LABELS: Record<number, string> = { 3: "Alta", 2: "Media", 1: "Baja" };
 const I_LABELS: Record<number, string> = { 1: "Bajo", 2: "Medio", 3: "Alto" };
 
 const cellTint: Record<string, string> = {
-  low: "bg-emerald-50/70 hover:bg-emerald-50",
-  med: "bg-amber-50/70 hover:bg-amber-50",
-  high: "bg-red-50/70 hover:bg-red-50",
+  low: "bg-emerald-50/70 hover:bg-emerald-50 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20",
+  med: "bg-amber-50/70 hover:bg-amber-50 dark:bg-amber-500/10 dark:hover:bg-amber-500/20",
+  high: "bg-red-50/70 hover:bg-red-50 dark:bg-red-500/10 dark:hover:bg-red-500/20",
 };
 const cellRing: Record<string, string> = {
-  low: "ring-emerald-200", med: "ring-amber-200", high: "ring-red-200",
+  low: "ring-emerald-200 dark:ring-emerald-500/25",
+  med: "ring-amber-200 dark:ring-amber-500/25",
+  high: "ring-red-200 dark:ring-red-500/25",
 };
 
 export function RiskMatrix({ risks }: { risks: Risk[] }) {

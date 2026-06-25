@@ -8,19 +8,70 @@
   --accent: #4f46e5;
   --accent-soft: #eef2ff;
   --accent-strong: #3730a3;
+
+  /* Semantic surface / text tokens — single source of truth for theming. */
+  --bg: #e9ecf1;          /* page background — a touch darker so cards read clearly */
+  --surface: #ffffff;     /* cards & panels */
+  --surface-2: #eef1f6;   /* inset surfaces (inputs, stat boxes) */
+  --border: #e2e6ec;
+  --border-soft: #eef1f5;
+  --text: #0b1220;
+  --text-muted: #475569;
+  --text-subtle: #64748b;
+  --text-faint: #94a3b8;
+
+  /* Chart palette (read by recharts via getComputedStyle) */
+  --chart-grid: #eceff4;
+  --chart-axis: #94a3b8;
+  --chart-axis-strong: #475569;
+  --chart-label: #64748b;
+
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.05);
+  --shadow-cardhover: 0 10px 24px -8px rgb(16 24 40 / 0.16), 0 4px 10px -4px rgb(16 24 40 / 0.08);
+  --scroll-thumb: #cbd5e1;
+  --scroll-thumb-hover: #94a3b8;
 }
+
+/* Dark theme — toggled by adding `.dark` on <html>. */
+.dark {
+  --bg: #0b0f17;
+  --surface: #141b27;
+  --surface-2: #1c2533;
+  --border: #283142;
+  --border-soft: #1f2836;
+  --text: #e6eaf0;
+  --text-muted: #aeb8c6;
+  --text-subtle: #8b97a8;
+  --text-faint: #6b7686;
+
+  --chart-grid: #232c3b;
+  --chart-axis: #6b7686;
+  --chart-axis-strong: #aeb8c6;
+  --chart-label: #8b97a8;
+
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-cardhover: 0 12px 28px -10px rgb(0 0 0 / 0.6), 0 4px 10px -4px rgb(0 0 0 / 0.4);
+  --scroll-thumb: #334155;
+  --scroll-thumb-hover: #475569;
+}
+
 /* Opportunity (Riesgos Positivos) palette — applied on the shell root. */
 .theme-opp {
   --accent: #0d9488;
   --accent-soft: #f0fdfa;
   --accent-strong: #0f766e;
 }
+.dark.theme-opp,
+.dark .theme-opp {
+  --accent-soft: #0c2b29;
+}
 
 html, body {
-  background: #f6f7f9;
-  color: #0b1220;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  transition: background-color .3s ease, color .3s ease;
 }
 
 /* Tabular numerals everywhere data appears */
@@ -28,15 +79,29 @@ html, body {
 
 /* Thin custom scrollbars */
 *::-webkit-scrollbar { width: 9px; height: 9px; }
-*::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
-*::-webkit-scrollbar-thumb:hover { background: #94a3b8; background-clip: content-box; }
+*::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; border: 2px solid transparent; background-clip: content-box; }
+*::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: content-box; }
 
 .card {
-  background: #fff;
-  border: 1px solid #eceff3;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  box-shadow: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.05);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow .25s ease, transform .25s ease, border-color .25s ease;
 }
+
+/* Small stat cards: subtle lift + accent sheen on hover. */
+.card-kpi { position: relative; overflow: hidden; }
+.card-kpi::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity .25s ease;
+}
+.card-kpi:hover::before { opacity: 1; }
 
 .btn-accent {
   background: var(--accent);
@@ -46,7 +111,52 @@ html, body {
 
 .recharts-default-tooltip {
   border-radius: 10px !important;
-  border: 1px solid #e5e9f0 !important;
-  box-shadow: 0 8px 24px -8px rgb(16 24 40 / 0.18) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  box-shadow: var(--shadow-cardhover) !important;
   font-size: 12px !important;
 }
+.recharts-default-tooltip .recharts-tooltip-label,
+.recharts-default-tooltip .recharts-tooltip-item { color: var(--text) !important; }
+
+/* ------------------------------------------------------------------ */
+/* Dark-mode compatibility layer.                                      */
+/* The UI uses Tailwind slate/ink utilities directly in markup. Rather */
+/* than editing every page, we remap the recurring ones to our tokens  */
+/* when `.dark` is active. Component-specific colors (charts, matrix    */
+/* tints) are handled with explicit `dark:` variants instead.          */
+/* ------------------------------------------------------------------ */
+.dark .text-ink { color: var(--text); }
+.dark .text-slate-700 { color: var(--text-muted); }
+.dark .text-slate-600 { color: var(--text-muted); }
+.dark .text-slate-500 { color: var(--text-subtle); }
+.dark .text-slate-400 { color: var(--text-faint); }
+.dark .text-slate-300 { color: var(--text-faint); }
+
+.dark .bg-white { background-color: var(--surface); }
+.dark .bg-slate-50 { background-color: var(--surface-2); }
+.dark .bg-slate-100 { background-color: var(--surface-2); }
+.dark .hover\:bg-slate-50:hover { background-color: var(--surface-2); }
+.dark .hover\:bg-white:hover { background-color: var(--surface); }
+.dark .focus\:bg-white:focus { background-color: var(--surface); }
+
+.dark .border-slate-200 { border-color: var(--border); }
+.dark .border-slate-100 { border-color: var(--border); }
+.dark .hover\:border-slate-300:hover { border-color: var(--text-faint); }
+.dark .border-\[\#f0f2f6\] { border-color: var(--border-soft); }
+.dark .border-\[\#f6f7f9\] { border-color: var(--border-soft); }
+.dark .divide-\[\#f0f2f6\] > :not([hidden]) ~ :not([hidden]) { border-color: var(--border-soft); }
+
+/* Colored status tints read poorly as pale fills on dark — soften them. */
+.dark .bg-emerald-50 { background-color: rgb(16 185 129 / 0.12); }
+.dark .bg-amber-50 { background-color: rgb(217 119 6 / 0.14); }
+.dark .bg-red-50 { background-color: rgb(220 38 38 / 0.13); }
+.dark .border-emerald-100 { border-color: rgb(16 185 129 / 0.25); }
+.dark .border-red-100 { border-color: rgb(220 38 38 / 0.25); }
+.dark .text-emerald-700 { color: #6ee7b7; }
+.dark .text-amber-700 { color: #fcd34d; }
+.dark .text-red-700 { color: #fca5a5; }
+.dark .text-emerald-600 { color: #34d399; }
+.dark .text-amber-600 { color: #fbbf24; }
+.dark .text-red-600 { color: #f87171; }

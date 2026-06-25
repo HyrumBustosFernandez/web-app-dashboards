@@ -5,9 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BarChart3, ShieldCheck, Calculator, Search, Database,
-  ShieldAlert, TrendingUp, ChevronRight,
+  ShieldAlert, TrendingUp, ChevronRight, Sun, Moon,
 } from "lucide-react";
 import { useData } from "@/lib/store";
+import { useTheme } from "@/lib/theme";
 import { Spinner } from "./ui";
 
 const NAV = [
@@ -92,12 +93,30 @@ function DatasetSelector() {
   );
 }
 
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const isDark = mounted && theme === "dark";
+  return (
+    <button
+      onClick={toggle}
+      suppressHydrationWarning
+      aria-label={isDark ? "Activar modo claro" : "Activar modo oscuro"}
+      title={isDark ? "Modo claro" : "Modo oscuro"}
+      className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-slate-100 text-slate-500 ring-1 ring-slate-200/70 hover:text-[var(--accent)] hover:ring-[var(--accent)]/30 transition-colors"
+    >
+      {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+    </button>
+  );
+}
+
 function Topbar() {
   const path = usePathname();
   const { source } = useData();
   const current = NAV.find((n) => n.href === path) ?? NAV[0];
   return (
-    <header className="sticky top-0 z-20 h-16 bg-[#f6f7f9]/85 backdrop-blur border-b border-slate-200/70 flex items-center justify-between px-7">
+    <header className="sticky top-0 z-20 h-16 bg-[var(--bg)]/85 backdrop-blur border-b border-slate-200/70 flex items-center justify-between px-7">
       <div>
         <div className="text-[11px] text-slate-400">{current.hint}</div>
         <div className="text-[15px] font-semibold text-ink tracking-tight">{current.label}</div>
@@ -108,6 +127,7 @@ function Topbar() {
           <span className="max-w-[180px] truncate">{source}</span>
         </div>
         <DatasetSelector />
+        <ThemeToggle />
       </div>
     </header>
   );
