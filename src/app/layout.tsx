@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { DataProvider } from "@/lib/store";
 import { ThemeProvider } from "@/lib/theme";
-import AppShell from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "Risk Office · Sistema SGB",
@@ -19,11 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="font-sans antialiased">
-        <ThemeProvider>
-          <DataProvider>
-            <AppShell>{children}</AppShell>
-          </DataProvider>
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
