@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ConfettiButton } from "@/components/ConfettiButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,7 +34,10 @@ export default function LoginPage() {
             <div className="text-[10px] text-slate-400">Sistema SGB</div>
           </div>
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          <ConfettiButton />
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6 py-10">

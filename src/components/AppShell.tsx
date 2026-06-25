@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useData } from "@/lib/store";
 import { ThemeToggle } from "./ThemeToggle";
+import { ConfettiButton } from "./ConfettiButton";
 import { Spinner } from "./ui";
 
 const NAV = [
@@ -109,6 +110,7 @@ function Topbar() {
           <span className="max-w-[180px] truncate">{source}</span>
         </div>
         <DatasetSelector />
+        <ConfettiButton />
         <ThemeToggle />
       </div>
     </header>

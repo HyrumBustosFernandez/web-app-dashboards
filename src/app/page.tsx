@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { ShieldAlert, ChevronLeft, ChevronRight, ArrowRight, BarChart3, ShieldCheck, Calculator } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ConfettiButton } from "@/components/ConfettiButton";
 
 const SLIDES = [
   { src: "/screenshots/overview.png", title: "Resumen ejecutivo", caption: "KPIs, matriz de riesgo y distribución en un vistazo." },
@@ -105,6 +106,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <ConfettiButton />
             <ThemeToggle />
             <Link
               href="/login"
