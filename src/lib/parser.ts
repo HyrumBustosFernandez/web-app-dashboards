@@ -302,35 +302,54 @@ function parseMeta(wb: XLSX.WorkBook): ProjectMeta {
   return { idProyecto, nombreProyecto, director };
 }
 
+export interface SheetCheck {
+  name: string;
+  present: boolean;
+  core: boolean;       // the main sheet the rest of the app depends on
+  count: number;       // rows parsed (0 when absent)
+}
+
 export interface ValidationResult {
-  ok: boolean;
-  missing: string[];
+  importable: boolean;     // at least one recognized sheet is present
+  coreMissing: boolean;    // the main "Riesgos Negativos" sheet is absent
+  sheets: SheetCheck[];    // status of every expected sheet
   found: string[];
+  missing: string[];       // expected sheets that are absent
   summary: { negativos: number; positivos: number; pert: number; roles: number };
 }
 
 export function validateWorkbook(wb: XLSX.WorkBook): ValidationResult {
-  const required = [SHEET.negativos];
-  const optional = [SHEET.positivos, SHEET.pert, SHEET.sueldos];
   const names = wb.SheetNames;
-  const missing = required.filter((s) => !names.includes(s));
-  const found = [...required, ...optional].filter((s) => names.includes(s));
 
   const negRows = sheetRows(wb, SHEET.negativos);
   const posRows = sheetRows(wb, SHEET.positivos);
   const pertRows = sheetRows(wb, SHEET.pert);
   const roleRows = sheetRows(wb, SHEET.sueldos);
 
+  const summary = {
+    negativos: negRows ? parseRiskSheet(negRows, "NEG").length : 0,
+    positivos: posRows ? parseRiskSheet(posRows, "POS").length : 0,
+    pert: pertRows ? parsePert(pertRows).length : 0,
+    roles: roleRows ? parseSueldos(roleRows).length : 0,
+  };
+
+  const sheets: SheetCheck[] = [
+    { name: SHEET.negativos, present: names.includes(SHEET.negativos), core: true, count: summary.negativos },
+    { name: SHEET.positivos, present: names.includes(SHEET.positivos), core: false, count: summary.positivos },
+    { name: SHEET.pert, present: names.includes(SHEET.pert), core: false, count: summary.pert },
+    { name: SHEET.sueldos, present: names.includes(SHEET.sueldos), core: false, count: summary.roles },
+  ];
+
+  const found = sheets.filter((s) => s.present).map((s) => s.name);
+  const missing = sheets.filter((s) => !s.present).map((s) => s.name);
+
   return {
-    ok: missing.length === 0,
-    missing,
+    importable: found.length > 0,
+    coreMissing: !names.includes(SHEET.negativos),
+    sheets,
     found,
-    summary: {
-      negativos: negRows ? parseRiskSheet(negRows, "NEG").length : 0,
-      positivos: posRows ? parseRiskSheet(posRows, "POS").length : 0,
-      pert: pertRows ? parsePert(pertRows).length : 0,
-      roles: roleRows ? parseSueldos(roleRows).length : 0,
-    },
+    missing,
+    summary,
   };
 }
 

@@ -16,6 +16,80 @@ interface Staged {
   wb: XLSXType.WorkBook;
 }
 
+const SHEET_GUIDE: { name: string; required: boolean; powers: string }[] = [
+  {
+    name: "Riesgos Negativos",
+    required: true,
+    powers: "Hoja principal. Alimenta el Resumen (KPIs y matriz de riesgo), Análisis, Respuesta y el Explorador.",
+  },
+  {
+    name: "Riesgos Positivos",
+    required: false,
+    powers: "Habilita el conjunto «Riesgos Positivos» del selector superior, con sus propios gráficos y tablas.",
+  },
+  {
+    name: "PERT",
+    required: false,
+    powers: "Alimenta los rankings y las distribuciones de costo y tiempo de la página PERT y Costos.",
+  },
+  {
+    name: "SUELDOS por ROLES",
+    required: false,
+    powers: "Aporta las tarifas por rol (sueldo, costo por hora y por día) usadas en la justificación económica.",
+  },
+];
+
+function ImportGuide() {
+  return (
+    <Card className="mt-5 animate-fadeUp">
+      <PanelHeader title="Guía de importación" subtitle="Qué archivo necesitas y qué alimenta cada hoja" />
+      <div className="p-5 space-y-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12.5px]">
+          <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
+            <div className="font-semibold text-ink mb-0.5">Tipo de archivo</div>
+            <p className="text-slate-500">Excel <strong className="text-slate-700">.xlsx</strong> o <strong className="text-slate-700">.xls</strong>.</p>
+          </div>
+          <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
+            <div className="font-semibold text-ink mb-0.5">Columnas</div>
+            <p className="text-slate-500">Se detectan por el <strong className="text-slate-700">texto del encabezado</strong>; pueden cambiar de orden o de posición.</p>
+          </div>
+          <div className="rounded-lg bg-slate-50 border border-slate-100 p-3">
+            <div className="font-semibold text-ink mb-0.5">Hojas faltantes</div>
+            <p className="text-slate-500">Puedes importar igual; solo los gráficos de esa hoja quedarán vacíos.</p>
+          </div>
+        </div>
+
+        <div>
+          <h4 className="text-[12px] font-semibold uppercase tracking-wide text-slate-400 mb-2">Hojas (pestañas) del workbook</h4>
+          <div className="space-y-2">
+            {SHEET_GUIDE.map((s) => (
+              <div key={s.name} className="flex items-start gap-3 rounded-lg border border-[#f0f2f6] px-3 py-2.5">
+                <FileSpreadsheet className="w-4 h-4 shrink-0 mt-0.5 text-[var(--accent)]" />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-medium text-ink">{s.name}</span>
+                    <Badge tone={s.required ? "accent" : "neutral"}>{s.required ? "Principal" : "Opcional"}</Badge>
+                  </div>
+                  <p className="text-[12.5px] text-slate-500 mt-0.5 leading-relaxed">{s.powers}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-lg bg-[var(--accent-soft)] border border-[var(--accent)]/15 px-3 py-3">
+          <h4 className="text-[12.5px] font-semibold text-[var(--accent-strong)] mb-1">Totales del fondo de contingencia</h4>
+          <p className="text-[12.5px] text-slate-600 leading-relaxed">
+            Si tu archivo incluye celdas sueltas como <strong>PERT total</strong>, <strong>Riesgo total</strong>,{" "}
+            <strong>Fondo de contingencia</strong> o <strong>Remanente</strong> (debajo de los riesgos, en cualquier
+            posición), se detectan por su etiqueta y aparecen como tarjetas en <strong>PERT y Costos</strong>.
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export default function AdminPage() {
   const { data, source, replaceData, clearData } = useData();
   const [dragging, setDragging] = useState(false);
@@ -130,41 +204,61 @@ export default function AdminPage() {
                 }
               />
               <div className="p-5">
-                {/* Required-sheet validation */}
-                <div className="mb-4">
-                  {v.ok ? (
-                    <div className="flex items-center gap-2 text-[13px] text-emerald-700">
-                      <CheckCircle2 className="w-4 h-4" /> Hojas requeridas presentes
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-100 px-3 py-2.5 text-[12.5px] text-red-700">
-                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>Faltan hojas obligatorias: <strong>{v.missing.join(", ")}</strong>. No se puede importar.</span>
-                    </div>
-                  )}
-                  <div className="flex flex-wrap gap-1.5 mt-2.5">
-                    {v.found.map((s) => <Badge key={s} tone="accent">{s}</Badge>)}
+                {/* Banner: core sheet present or not — informational, never blocking */}
+                {v.coreMissing ? (
+                  <div className="mb-4 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-100 px-3 py-2.5 text-[12.5px] text-amber-700">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>
+                      Falta la hoja principal <strong>Riesgos Negativos</strong>. Puedes importar igual, pero
+                      las vistas que dependen de ella quedarán vacías.
+                    </span>
                   </div>
-                </div>
+                ) : (
+                  <div className="mb-4 flex items-center gap-2 text-[13px] text-emerald-700">
+                    <CheckCircle2 className="w-4 h-4" /> Hoja principal detectada
+                  </div>
+                )}
 
-                {/* Summary counts */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    ["Riesgos Negativos", v.summary.negativos],
-                    ["Riesgos Positivos", v.summary.positivos],
-                    ["Registros PERT", v.summary.pert],
-                    ["Roles / Sueldos", v.summary.roles],
-                  ].map(([label, n]) => (
-                    <div key={label as string} className="rounded-lg bg-slate-50 border border-slate-100 px-3 py-3 text-center">
-                      <div className="text-2xl font-bold text-ink tnum">{n as number}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{label as string}</div>
+                {/* Per-sheet checklist: present (✓) vs not included (✕) */}
+                <div className="space-y-2">
+                  {v.sheets.map((s) => (
+                    <div
+                      key={s.name}
+                      className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 ${
+                        s.present
+                          ? "bg-emerald-50 border-emerald-100"
+                          : "bg-amber-50 border-amber-100"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {s.present
+                          ? <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                          : <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />}
+                        <span className="text-[13px] font-medium text-ink truncate">{s.name}</span>
+                        {s.core && <Badge tone="accent">Principal</Badge>}
+                      </div>
+                      <span className={`text-[12px] tnum shrink-0 ${s.present ? "text-emerald-700" : "text-amber-700"}`}>
+                        {s.present ? `${s.count} registro(s)` : "No incluida"}
+                      </span>
                     </div>
                   ))}
                 </div>
 
+                {v.missing.length > 0 && (
+                  <p className="mt-3 text-[12px] text-slate-500">
+                    Hojas no incluidas: <strong className="text-slate-700">{v.missing.join(", ")}</strong>.
+                    Se importará lo disponible; sus gráficos quedarán vacíos hasta que las agregues.
+                  </p>
+                )}
+                {!v.importable && (
+                  <p className="mt-3 text-[12px] text-red-600">
+                    El archivo no contiene ninguna de las hojas reconocidas, así que no hay datos para importar.
+                  </p>
+                )}
+
                 <div className="flex items-center gap-2 mt-5">
                   <button
-                    disabled={!v.ok || busy}
+                    disabled={busy || !v.importable}
                     onClick={confirmImport}
                     className="btn-accent inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-medium disabled:opacity-40 transition"
                   >
@@ -198,23 +292,23 @@ export default function AdminPage() {
           </Card>
 
           <Card className="p-5 animate-fadeUp">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <FileSpreadsheet className="w-4 h-4 text-[var(--accent)]" />
-              <h3 className="text-[13px] font-semibold text-ink">Formato esperado</h3>
+              <h3 className="text-[13px] font-semibold text-ink">En resumen</h3>
             </div>
             <ul className="text-[12.5px] text-slate-500 space-y-1.5 leading-relaxed">
-              <li>· Hoja obligatoria: <strong className="text-slate-700">Riesgos Negativos</strong></li>
-              <li>· Hojas opcionales: Riesgos Positivos, PERT, SUELDOS por ROLES</li>
-              <li>· Encabezados detectados automáticamente por su texto</li>
-              <li>· Las columnas pueden moverse: el lector las busca por nombre</li>
+              <li>· Archivo Excel <strong className="text-slate-700">.xlsx</strong> o <strong className="text-slate-700">.xls</strong></li>
+              <li>· Encabezados detectados por su texto — las columnas pueden moverse</li>
+              <li>· Puedes importar aunque falten hojas</li>
             </ul>
             <p className="text-[11px] text-slate-400 mt-3 leading-relaxed">
-              Los datos importados se guardan en el navegador (localStorage) y persisten al recargar. Consulta el README
-              para migrar a almacenamiento en servidor (Vercel Blob).
+              Los datos importados se guardan en el navegador (localStorage) y persisten al recargar.
             </p>
           </Card>
         </div>
       </div>
+
+      <ImportGuide />
     </div>
   );
 }
