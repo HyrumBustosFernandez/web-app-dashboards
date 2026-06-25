@@ -66,14 +66,14 @@ Excel  →  parser.ts  →  RiskDataset (JSON)  →  store.tsx (contexto + persi
 - `src/lib/riskService.ts` — toda la lógica derivada (matriz, bandas de magnitud,
   conteos, rankings, distribuciones, justificación económica). Ningún gráfico lee
   el Excel directamente.
-- `src/lib/store.tsx` — contexto de React; carga la semilla y persiste importaciones.
+- `src/lib/store.tsx` — contexto de React; persiste las importaciones.
 - `src/lib/pdf.ts` — informe PDF por riesgo (jsPDF + autotable).
 
-### Datos semilla
+### Datos
 
-`public/seed-data.json` contiene los datos reales del proyecto SGB ya parseados
-(44 riesgos negativos, 22 positivos, 44 registros PERT, 21 roles). La app arranca
-con estos datos sin necesidad de subir nada.
+La app **no incluye datos de ejemplo**: arranca vacía y todo lo que se muestra
+proviene de un workbook de Excel importado desde la página **Datos**. La última
+importación se guarda en `localStorage` y se restaura al recargar.
 
 ---
 

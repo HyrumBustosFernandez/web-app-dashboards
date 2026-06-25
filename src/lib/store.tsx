@@ -6,6 +6,8 @@ import type { RiskDataset, DatasetKey } from "./types";
 const STORAGE_KEY = "sgb-risk-dataset-v1";
 const SOURCE_KEY = "sgb-risk-source-v1";
 
+const NO_DATA_SOURCE = "Sin datos importados";
+
 interface DataState {
   data: RiskDataset | null;
   loading: boolean;
@@ -14,7 +16,7 @@ interface DataState {
   source: string;                 // where current data came from
   setDataset: (k: DatasetKey) => void;
   replaceData: (d: RiskDataset, sourceName: string) => void;
-  resetToSeed: () => Promise<void>;
+  clearData: () => void;
 }
 
 const Ctx = createContext<DataState | null>(null);
@@ -24,43 +26,30 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dataset, setDatasetState] = useState<DatasetKey>("negativos");
-  const [source, setSource] = useState<string>("Datos del proyecto SGB");
+  const [source, setSource] = useState<string>(NO_DATA_SOURCE);
 
-  const loadSeed = useCallback(async () => {
-    const res = await fetch("/seed-data.json", { cache: "no-store" });
-    if (!res.ok) throw new Error("No se pudo cargar seed-data.json");
-    const json = (await res.json()) as RiskDataset;
-    return json;
-  }, []);
-
+  // No seed/base data: the tablero starts empty and only shows what the user
+  // imports. A previously imported workbook is restored from localStorage.
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const stored = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
-        if (stored) {
-          const parsed = JSON.parse(stored) as RiskDataset;
-          if (!cancelled) {
-            setData(parsed);
-            setSource(window.localStorage.getItem(SOURCE_KEY) || "Workbook importado");
-            setLoading(false);
-          }
-          return;
-        }
-        const seed = await loadSeed();
-        if (!cancelled) { setData(seed); setLoading(false); }
-      } catch (e) {
-        if (!cancelled) { setError(e instanceof Error ? e.message : "Error de carga"); setLoading(false); }
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setData(JSON.parse(stored) as RiskDataset);
+        setSource(window.localStorage.getItem(SOURCE_KEY) || "Workbook importado");
       }
-    })();
-    return () => { cancelled = true; };
-  }, [loadSeed]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error de carga");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const setDataset = useCallback((k: DatasetKey) => setDatasetState(k), []);
 
   const replaceData = useCallback((d: RiskDataset, sourceName: string) => {
     setData(d);
     setSource(sourceName);
+    setError(null);
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
       window.localStorage.setItem(SOURCE_KEY, sourceName);
@@ -69,21 +58,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const resetToSeed = useCallback(async () => {
-    setLoading(true);
+  const clearData = useCallback(() => {
     try {
       window.localStorage.removeItem(STORAGE_KEY);
       window.localStorage.removeItem(SOURCE_KEY);
     } catch { /* ignore */ }
-    const seed = await loadSeed();
-    setData(seed);
-    setSource("Datos del proyecto SGB");
-    setLoading(false);
-  }, [loadSeed]);
+    setData(null);
+    setSource(NO_DATA_SOURCE);
+    setError(null);
+  }, []);
 
   const value = useMemo<DataState>(() => ({
-    data, loading, error, dataset, source, setDataset, replaceData, resetToSeed,
-  }), [data, loading, error, dataset, source, setDataset, replaceData, resetToSeed]);
+    data, loading, error, dataset, source, setDataset, replaceData, clearData,
+  }), [data, loading, error, dataset, source, setDataset, replaceData, clearData]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BarChart3, ShieldCheck, Calculator, Search, Database,
-  ShieldAlert, TrendingUp, ChevronRight,
+  ShieldAlert, TrendingUp, ChevronRight, UploadCloud,
 } from "lucide-react";
 import { useData } from "@/lib/store";
 import { ThemeToggle } from "./ThemeToggle";
@@ -117,9 +117,33 @@ function Topbar() {
   );
 }
 
+function NoDataState() {
+  return (
+    <div className="card p-10 max-w-lg mx-auto mt-12 text-center animate-fadeUp">
+      <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--accent-soft)] flex items-center justify-center mb-4">
+        <Database className="w-7 h-7 text-[var(--accent)]" />
+      </div>
+      <h2 className="text-lg font-bold text-ink tracking-tight">No hay datos cargados</h2>
+      <p className="text-sm text-slate-500 mt-1.5 max-w-sm mx-auto">
+        Este tablero no incluye datos de ejemplo. Importa un workbook de Excel para visualizar
+        el registro de riesgos.
+      </p>
+      <Link
+        href="/admin"
+        className="mt-5 inline-flex items-center gap-2 rounded-lg btn-accent px-5 py-2.5 text-[14px] font-medium transition-colors"
+      >
+        <UploadCloud className="w-4 h-4" /> Importar datos
+      </Link>
+    </div>
+  );
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { dataset, loading, error } = useData();
+  const path = usePathname();
+  const { data, dataset, loading, error } = useData();
   const themeClass = dataset === "positivos" ? "theme-opp" : "";
+  // The Datos page must stay reachable with no data so the user can import.
+  const needsData = !data && path !== "/admin";
 
   return (
     <div className={themeClass}>
@@ -129,7 +153,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <main className="px-7 py-7 min-h-[calc(100vh-4rem)]">
           {loading && (
             <div className="flex items-center justify-center py-32">
-              <Spinner label="Cargando datos del registro de riesgos…" />
+              <Spinner label="Cargando registro de riesgos…" />
             </div>
           )}
           {error && !loading && (
@@ -138,7 +162,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <p className="text-sm text-slate-500">{error}</p>
             </div>
           )}
-          {!loading && !error && children}
+          {!loading && !error && (needsData ? <NoDataState /> : children)}
         </main>
       </div>
     </div>

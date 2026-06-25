@@ -5,7 +5,7 @@ import { useData } from "@/lib/store";
 import { workbookFromBuffer, validateWorkbook, parseWorkbook, ValidationResult } from "@/lib/parser";
 import { PageHeader, Card, PanelHeader, Badge } from "@/components/ui";
 import {
-  UploadCloud, FileSpreadsheet, CheckCircle2, AlertTriangle, RotateCcw, X, Database,
+  UploadCloud, FileSpreadsheet, CheckCircle2, AlertTriangle, Trash2, X, Database,
 } from "lucide-react";
 import type * as XLSXType from "xlsx";
 import type { RiskDataset } from "@/lib/types";
@@ -17,7 +17,7 @@ interface Staged {
 }
 
 export default function AdminPage() {
-  const { source, replaceData, resetToSeed } = useData();
+  const { data, source, replaceData, clearData } = useData();
   const [dragging, setDragging] = useState(false);
   const [staged, setStaged] = useState<Staged | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -187,12 +187,14 @@ export default function AdminPage() {
               <h3 className="text-[13px] font-semibold text-ink">Fuente actual</h3>
             </div>
             <p className="text-[13px] text-slate-600">{source}</p>
-            <button
-              onClick={() => { setError(null); setDone(null); resetToSeed(); }}
-              className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border border-slate-200 hover:bg-slate-50 transition"
-            >
-              <RotateCcw className="w-3.5 h-3.5" /> Restaurar datos del proyecto SGB
-            </button>
+            {data && (
+              <button
+                onClick={() => { setError(null); setDone(null); setStaged(null); clearData(); }}
+                className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12.5px] font-medium border border-slate-200 hover:bg-slate-50 hover:text-red-600 hover:border-red-200 transition"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Borrar datos importados
+              </button>
+            )}
           </Card>
 
           <Card className="p-5 animate-fadeUp">
